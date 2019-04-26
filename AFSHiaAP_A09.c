@@ -138,6 +138,12 @@ static int a09_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 				fill=fopen(pat,"a+");
 				fputs(to,fill);
 				fclose(fill);
+				if(S_ISDIR(st.st_mode)){
+					rmdir(temp);
+				}
+				else{
+					remove(temp);
+				}
 			}
 			else{
 				for(i=0;i<strlen(name);i++){
