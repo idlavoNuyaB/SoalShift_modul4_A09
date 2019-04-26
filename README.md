@@ -13,8 +13,15 @@ Perhatian: Karakter ‘/’ adalah karakter ilegal dalam penamaan file atau fold
 
 ### Jawab :
 
+- Membuat enkripsi dan deskripsi caesar chiper dengan alphabet dan key yang telah ditentukan soal
+- Mengatur fungsi readdir sesuai soal
+- Dekripsi ditaruh di readdir saja sedangkan enkripsi ditaruh disemua tempat
+
 ### Langkah :
 
+- Menyiapkan hash table untuk setiap karakter
+- Menyiapkan enkripsi dan dekripsi
+- Melakukan dekripsi setiap file di readdir
 
 ## soal 2 
 Semua file video yang tersimpan secara terpecah-pecah (splitted) harus secara otomatis tergabung (joined) dan diletakkan dalam folder “Videos”
@@ -31,9 +38,8 @@ Urutan operasi dari kebutuhan ini adalah:
     - Hapus folder “Videos” 
 
 
-### Jawab :
-
-### Langkah :
+### Kendala :
+Saya bingung mau ngerjain soal ini.
 
 ## soal 3
 Sebelum diterapkannya file system ini, Atta pernah diserang oleh hacker LAPTOP_RUSAK yang menanamkan user bernama “chipset” dan “ic_controller” serta group “rusak” yang tidak bisa dihapus. Karena paranoid, Atta menerapkan aturan pada file system ini untuk menghapus “file bahaya” yang memiliki spesifikasi:
@@ -45,16 +51,21 @@ Jika ditemukan file dengan spesifikasi tersebut ketika membuka direktori, Atta a
 
 
 ### Jawab :
-
+- Ubah fungsi readdir sesuai permintaan soal
 ### Langkah :
+- Cek jenis, owner dan group dari tiap file. Jika iya, maka tidak dimasukkan ke FUSE
 
 ## soal 4 
 Pada folder YOUTUBER, setiap membuat folder permission foldernya akan otomatis menjadi 750. Juga ketika membuat file permissionnya akan otomatis menjadi 640 dan ekstensi filenya akan bertambah “.iz1”. File berekstensi “.iz1” tidak bisa diubah permissionnya dan memunculkan error bertuliskan “File ekstensi iz1 tidak boleh diubah permissionnya.”
 
+
 ### Jawab :
-
-
+- Atur fungsi chmod,mkdir serta create sesuai dari yang diminta soal
 ### Langkah :
+- Create & Mkdir :
+    - Cek nama direktori induk. Jika iya ubah permissionnya
+- Chown :
+    - Cek nama direktori induk serta nama ekstensi file
 
 
 ## soal 5 
