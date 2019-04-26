@@ -134,7 +134,7 @@ static int a09_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 				char pat[1000];
 				char to[1000];
 				sprintf(pat,"%s/V[EOr[c[Y`HDH",dirpath);
-				sprintf(to,"%s %s %s %02d:%02d:%02d %02d-%02d-%04d \n",temp,owner->pw_name,grup->gr_name,times->tm_hour,times->tm_min,times->tm_sec,times->tm_mday,times->tm_mon,akhir);
+				sprintf(to,"%s %d %d %02d:%02d:%02d %02d-%02d-%04d \n",temp,owner->pw_uid,grup->gr_gid,times->tm_hour,times->tm_min,times->tm_sec,times->tm_mday,times->tm_mon,akhir);
 				fill=fopen(pat,"a+");
 				fputs(to,fill);
 				fclose(fill);
