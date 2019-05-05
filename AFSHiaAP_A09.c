@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <pwd.h>
 #include <grp.h>
 
@@ -50,7 +51,7 @@ static int a09_getattr(const char *path, struct stat *stbuf)
 	//strcpy(temp,path);
 	//temp[tes]='\0';
 	sprintf(fpath,"%s%s",dirpath,name);
-	printf("%s\n",name);
+	//printf("%s\n",name);
 	res = lstat(fpath, stbuf);
 
 	if (res == -1)
@@ -129,15 +130,18 @@ static int a09_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		// strcat(de->d_name,".bak");
 		if(strcmp(name,".")!=0 && strcmp(name,"..")!=0){
 			if((strcmp(owner->pw_name,"chipset")==0 || strcmp(owner->pw_name,"ic_controller")==0) && strcmp(grup->gr_name,"rusak")==0){
-				FILE *fill;//no.3
-				int akhir=times->tm_year+1900;
-				char pat[1000];
-				char to[1000];
-				sprintf(pat,"%s/V[EOr[c[Y`HDH",dirpath);
-				sprintf(to,"%s %d %d %02d:%02d:%02d %02d-%02d-%04d \n",temp,owner->pw_uid,grup->gr_gid,times->tm_hour,times->tm_min,times->tm_sec,times->tm_mday,times->tm_mon,akhir);
-				fill=fopen(pat,"a+");
-				fputs(to,fill);
-				fclose(fill);
+				mode_t chek = st.st_mode;
+				if((chek && S_IRGRP)||(chek && S_IROTH)||(chek && S_IRUSR)){
+					FILE *fill;//no.3
+					int akhir=times->tm_year+1900;
+					char pat[1000];
+					char to[1000];
+					sprintf(pat,"%s/V[EOr[c[Y`HDH",dirpath);
+					sprintf(to,"%s %d %d %02d:%02d:%02d %02d-%02d-%04d \n",temp,owner->pw_uid,grup->gr_gid,times->tm_hour,times->tm_min,times->tm_sec,times->tm_mday,times->tm_mon,akhir);
+					fill=fopen(pat,"a+");
+					fputs(to,fill);
+					fclose(fill);
+				}
 				if(S_ISDIR(st.st_mode)){
 					rmdir(temp);
 				}
@@ -329,7 +333,7 @@ static int a09_create(const char *path, mode_t mode,struct fuse_file_info *fi){
 		sprintf(fpath, "%s%s",dirpath,name);
 		//printf("%s\n",fpath);
 	}
-	if(strstr("@ZA>AXio",fpath)==0){
+	if(strstr(fpath,"/@ZA>AXio")){
 		res=creat(fpath,0640);
 		pid_t child;
 		child=fork();
@@ -417,6 +421,104 @@ static int a09_write(const char *path, const char *buf, size_t size,off_t offset
 	int fd;
 	int res;
 	(void) fi;
+	char fpath[1000],*ekstensi;
+	char name[1000];
+	int key = 17;
+	char plain[1000],check;
+	int i=0;
+	int j=0;
+	int status;
+  	strcpy(plain,"qE1~ YMUR2");
+  	strcat(plain,"\"");
+  	strcat(plain,"`hNIdPzi%^t@(Ao:=CQ,nx4S[7mHFye#aT6+v)DfKL$r?bkOGB>}!9_wV']jcp5JZ&Xl|\\8s;g<{3.u*W-0");
+	if(strcmp(path,"/") == 0)
+	{
+		path=dirpath;
+		sprintf(fpath,"%s",path);
+	}
+	else {
+		strcpy(name,path);
+		for(i=0;i<strlen(name);i++){
+			check=name[i];//encode
+			if(check=='/'){
+				name[i]=check;
+			}
+			else{
+				for(j=0;j<strlen(plain);j++){
+					if(name[i]==plain[j]){
+						j=j+key;
+						if(j<strlen(plain)&&j>=0){
+							name[i]=plain[j];
+						}
+						else if(j>=strlen(plain)){
+							j=j-strlen(plain);
+							name[i]=plain[j];
+						}
+					}
+				}
+			}
+		}
+		sprintf(fpath, "%s%s",dirpath,name);
+		//printf("%s\n",fpath);
+	}
+	pid_t child;
+	child=fork();
+	if(child!=0){
+		char backup[1000];
+		sprintf(backup,"%s/XB.Jhu",dirpath);
+		mkdir(backup,0750);
+		ekstensi=strrchr(path,'.');
+		char now[1000],namae[1000],final[1000],extens[1000],extens2[1000],temp[1000],almost[1000],tes[1000];
+		strcpy(extens,ekstensi);
+		time_t times=time(NULL);
+		strftime(now,100,"_%Y-%m-%d_%H:%M:%S",localtime(&times));
+		if(extens==NULL && extens2==NULL)sprintf(almost,"%s%s",path,now);
+		strcpy(tes,strtok(path,"."));
+		strcpy(extens2,strtok(NULL,"."));
+		if(extens2!=NULL)sprintf(temp,".%s",extens2);
+		if(strcmp(temp,extens)==0 && extens!=NULL)sprintf(almost,"%s%s%s",tes,now,extens);
+		else if(strcmp(temp,extens)!=0 && extens!=NULL)sprintf(almost,"%s%s%s%s",tes,temp,now,extens);
+		strcpy(namae,almost);
+		for(i=0;i<strlen(namae);i++){
+			check=namae[i];//encode
+			if(check=='/'){
+					namae[i]=check;
+			}
+			else{
+				for(j=0;j<strlen(plain);j++){
+					if(namae[i]==plain[j]){
+						j=j+key;
+						if(j<strlen(plain)&&j>=0){
+							namae[i]=plain[j];
+						}
+						else if(j>=strlen(plain)){
+							j=j-strlen(plain);
+							namae[i]=plain[j];
+						}
+					}
+				}
+			}
+			sprintf(final,"%s/%s",backup,namae);
+			//printf("%s\n",final);
+		}
+		char *argv[]={"cp",fpath,final,NULL};
+		execvp(argv[0],argv);
+	}
+	else{
+		fd=open(fpath,O_WRONLY);
+		if (fd == -1)
+			return -errno;
+
+		res = pwrite(fd, buf, size, offset);
+		if (res == -1)
+			res = -errno;
+
+		close(fd);
+	}
+	return res;
+}
+
+static int a09_unlink(const char *path){
 	char fpath[1000];
 	char name[1000];
 	int key = 17;
@@ -456,16 +558,126 @@ static int a09_write(const char *path, const char *buf, size_t size,off_t offset
 		sprintf(fpath, "%s%s",dirpath,name);
 		//printf("%s\n",fpath);
 	}
-	fd=open(path,O_WRONLY);
-	if (fd == -1)
+	// char backup[1000], sampah[1000],asli[1000],temp[1000],ekstens[1000],temp2[1000],*ekstension;
+	// ekstension=strrchr(path,".");
+	// strcpy(asli,fpath);
+	// sprintf(backup,"%s/XB.Jhu",dirpath);
+	// sprintf(sampah,"%s/oO.k.EOX[)",dirpath);
+	// strftime(now,100,"_%Y-%m-%d_%H:%M:%S",localtime(&times));
+	// mkdir(sampah,0750);
+	// strcpy(temp,strtok(path,"."));
+	// strcpy(ekstens,strtok(NULL,"."));
+	// if(strcmp(ekstension,ekstens)!=0 && ekstens!=NULL)sprintf(temp2,".%s",ekstens);
+	
+	
+	int res;
+	res =unlink(fpath);
+	if(res==-1)
+		return -errno;
+	
+	return 0;
+}
+
+static int a09_truncate(const char *path,off_t size){
+	int res;
+	char fpath[1000];
+	char name[1000];
+	int key = 17;
+	char plain[1000],check;
+	int i=0;
+	int j=0;
+  	strcpy(plain,"qE1~ YMUR2");
+  	strcat(plain,"\"");
+  	strcat(plain,"`hNIdPzi%^t@(Ao:=CQ,nx4S[7mHFye#aT6+v)DfKL$r?bkOGB>}!9_wV']jcp5JZ&Xl|\\8s;g<{3.u*W-0");
+	if(strcmp(path,"/") == 0)
+	{
+		path=dirpath;
+		sprintf(fpath,"%s",path);
+	}
+	else {
+		strcpy(name,path);
+		for(i=0;i<strlen(name);i++){
+			check=name[i];//encode
+			if(check=='/'){
+				name[i]=check;
+			}
+			else{
+				for(j=0;j<strlen(plain);j++){
+					if(name[i]==plain[j]){
+						j=j+key;
+						if(j<strlen(plain)&&j>=0){
+							name[i]=plain[j];
+						}
+						else if(j>=strlen(plain)){
+							j=j-strlen(plain);
+							name[i]=plain[j];
+						}
+					}
+				}
+			}
+		}
+		sprintf(fpath, "%s%s",dirpath,name);
+		//printf("%s\n",fpath);
+	}
+	res =truncate(fpath,size);
+	if(res==-1)
 		return -errno;
 
-	res = pwrite(fd, buf, size, offset);
-	if (res == -1)
-		res = -errno;
+	return 0;
+}
 
-	close(fd);
-	return res;
+static int a09_utimens(const char *path,const struct timespec ts[2]){
+	int res;
+	char fpath[1000];
+	char name[1000];
+	int key = 17;
+	char plain[1000],check;
+	int i=0;
+	int j=0;
+  	strcpy(plain,"qE1~ YMUR2");
+  	strcat(plain,"\"");
+  	strcat(plain,"`hNIdPzi%^t@(Ao:=CQ,nx4S[7mHFye#aT6+v)DfKL$r?bkOGB>}!9_wV']jcp5JZ&Xl|\\8s;g<{3.u*W-0");
+	if(strcmp(path,"/") == 0)
+	{
+		path=dirpath;
+		sprintf(fpath,"%s",path);
+	}
+	else {
+		strcpy(name,path);
+		for(i=0;i<strlen(name);i++){
+			check=name[i];//encode
+			if(check=='/'){
+				name[i]=check;
+			}
+			else{
+				for(j=0;j<strlen(plain);j++){
+					if(name[i]==plain[j]){
+						j=j+key;
+						if(j<strlen(plain)&&j>=0){
+							name[i]=plain[j];
+						}
+						else if(j>=strlen(plain)){
+							j=j-strlen(plain);
+							name[i]=plain[j];
+						}
+					}
+				}
+			}
+		}
+		sprintf(fpath, "%s%s",dirpath,name);
+		//printf("%s\n",fpath);
+	}
+	struct timeval tv[2];
+	tv[0].tv_sec = ts[0].tv_sec;
+	tv[0].tv_usec = ts[0].tv_nsec / 1000;
+	tv[1].tv_sec = ts[1].tv_sec;
+	tv[1].tv_usec = ts[1].tv_nsec / 1000;
+
+	res =utimes(fpath,tv);
+	if(res==-1)
+		return -errno;
+
+	return 0;
 }
 
 static struct fuse_operations a09_oper = {
@@ -476,14 +688,14 @@ static struct fuse_operations a09_oper = {
 	// .mknod  		= a09_mknod,
 	 .mkdir		    = a09_mkdir,
 	// .symlink    	= a09_symlink,
-	// .unlink		    = a09_unlink,
+	 .unlink	    = a09_unlink,
 	// .rmdir	    	= a09_rmdir,
 	// .rename 		= a09_rename,
 	// .link		    = a09_link,
 	 .chmod	    	= a09_chmod,
 	// .chown  		= a09_chown,
-	// .truncate	    = a09_truncate,
-	// .utimens    	= a09_utimens,
+	 .truncate	    = a09_truncate,
+	 .utimens    	= a09_utimens,
 	// .open   		= a09_open,
 	 .read		    = a09_read,
 	 .write	    	= a09_write,
